@@ -2,7 +2,7 @@
 A curated collection of my work as an aspiring Data Science practitioner. Creating automated pipelines and predictive models (Python/Scikit-Learn) to analyze intricate datasets, including NYC weather-driven retail growth, US election demographics, and GIS historical mapping.
 
 **NYC Weather & Retail Impact Analysis
-Code:** NYC_Weather_Retail_Impact.ipynb 
+Code:** NYC_Weather_Retail_Impact.ipynb (Currently untitled.ipynb and CMSC486-1.ipynb)
 
 **Key Skills:** Time-series forecasting, Scikit-Learn (Linear Regression), Data Engineering (84k+ rows).
 
