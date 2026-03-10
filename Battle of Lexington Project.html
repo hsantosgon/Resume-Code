@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Battle of Lexington and Concord - Detailed Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+    body { font-family: Georgia, serif; margin: 0; display: flex; background: #f3f0e6; }
+    #sidebar {
+        width: 300px;
+        height: 100vh;
+        background: #fff;
+        border-right: 2px solid #ccc;
+        overflow-y: auto;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+    #sidebar h2 { margin-top: 0; color: #4b2e1e; font-size: 18px; }
+    .event-item { margin: 6px 0; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .event-item:hover { background: #f0e6d6; }
+    .event-british { border-left: 4px solid red; }
+    .event-colonist { border-left: 4px solid green; }
+    #map { flex: 1; height: 100vh; }
+    .legend {
+        background: white;
+        padding: 6px;
+        border: 1px solid #ccc;
+        font-family: sans-serif;
+        font-size: 14px;
+        line-height: 1.4em;
+        box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
+    .legend img { vertical-align: middle; width: 20px; height: 20px; margin-right: 5px; }
+    .legend-title { font-weight: bold; margin-bottom: 5px; display: block; color: #4b2e1e; }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2>Event Index</h2>
+    <div id="event-list"></div>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-polylinedecorator"></script>
+<script>
+    const map = L.map('map').setView([42.448, -71.235], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // --- Icons ---
+    const britishIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', iconSize: [25, 25] });
+    const colonistIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/190/190411.png', iconSize: [25, 25] });
+
+    // --- Routes ---
+    const britishRoute = [
+        {coords: [42.360, -71.058], info: "Boston, 4:00 AM: British depart Boston to seize arms. 700 troops."},
+        {coords: [42.373, -71.100], info: "Cambridge, 4:30 AM: March through suburbs, minor sightings of militia."},
+        {coords: [42.398, -71.150], info: "Menotomy (Arlington), 5:00 AM: Skirmish begins, 2 colonists wounded, 1 British wounded."},
+        {coords: [42.447, -71.231], info: "Lexington Green, 5:30 AM: First shots fired. 8 colonists killed, 10 wounded, 1 British wounded."},
+        {coords: [42.455, -71.290], info: "Lexington outskirts, 6:00 AM: Reinforcements join colonial militia, more skirmishes."},
+        {coords: [42.460, -71.348], info: "Concord North Bridge, 6:30 AM: Colonial militia resist; British casualties increase. 3 British killed, 4 colonists wounded."},
+        {coords: [42.440, -71.270], info: "Retreat path, 7:00-9:00 AM: British ambushed along Battle Road by militia. British retreat back to Boston."},
+        {coords: [42.360, -71.058], info: "Return to Boston, 9:00 AM: British arrive, heavy casualties. End of day."}
+    ];
+
+    const colonistPoints = [
+        {coords: [42.447, -71.231], info: "Lexington Militia: 70 men under Captain John Parker. First shots fired, retreated after 15 mins."},
+        {coords: [42.455, -71.290], info: "Lexington Reinforcements: Additional minutemen joined; skirmishes continued."},
+        {coords: [42.460, -71.348], info: "Concord Militia: 400-500 militia resisted British at North Bridge. 4 colonists wounded, 3 British killed."},
+        {coords: [42.440, -71.270], info: "Ambushes along Battle Road: Militia fired from fences, walls, and trees during British retreat."}
+    ];
+
+    const lexingtonFacts = [
+        {coords: [42.447, -71.231], info: "Lexington Green: 'Shot Heard Round the World'."},
+        {coords: [42.4468, -71.2315], info: "Captain Parker orders militia to disperse."},
+        {coords: [42.4472, -71.232], info: "Casualties: 8 colonists killed, 10 wounded."},
+        {coords: [42.4475, -71.2305], info: "Weapons: Muskets, a few small cannons."},
+        {coords: [42.4465, -71.232], info: "Eyewitness accounts vary; unclear who fired first."},
+        {coords: [42.446, -71.231], info: "Significance: Start of American Revolutionary War."},
+        {coords: [42.447, -71.229], info: "Militia retreat in an organized manner toward Concord."}
+    ];
+
+    const markers = [];
+
+    // --- Add British markers and arrows ---
+    const britishCoords = britishRoute.map(p => p.coords);
+    const britishPolyline = L.polyline(britishCoords, {color:'red', weight:4, opacity:0.7}).addTo(map);
+    L.polylineDecorator(britishPolyline, {patterns:[{offset:25, repeat:50, symbol: L.Symbol.arrowHead({pixelSize:10, pathOptions:{color:'red', fillOpacity:1}})}]}).addTo(map);
+
+    function calcMiles(coords) {
+        let total = 0;
+        for (let i=0;i<coords.length-1;i++){
+            total += L.latLng(coords[i]).distanceTo(L.latLng(coords[i+1]));
+        }
+        return (total*0.000621371).toFixed(2);
+    }
+
+    britishPolyline.bindPopup(`<b>British Route</b><br>Total distance: ${calcMiles(britishCoords)} miles`);
+
+    britishRoute.forEach(pt=>{
+        const marker = L.marker(pt.coords,{icon:britishIcon}).addTo(map).bindPopup("<b>British Troops</b><br>"+pt.info);
+        markers.push(marker);
+        addEventToSidebar("British", pt.info, marker);
+    });
+
+    // --- Add Colonist markers ---
+    colonistPoints.forEach(pt=>{
+        const marker = L.marker(pt.coords,{icon:colonistIcon}).addTo(map).bindPopup("<b>Colonial Militia</b><br>"+pt.info);
+        markers.push(marker);
+        addEventToSidebar("Colonist", pt.info, marker);
+    });
+
+    // --- Add Lexington facts ---
+    lexingtonFacts.forEach(pt=>{
+        const marker = L.marker(pt.coords,{icon:colonistIcon}).addTo(map).bindPopup(pt.info);
+        markers.push(marker);
+        addEventToSidebar("Colonist", pt.info, marker);
+    });
+
+    // --- Highlight circles ---
+    L.circle([42.447, -71.231], {radius:200, color:'blue', fillOpacity:0.1}).addTo(map);
+    L.circle([42.460, -71.348], {radius:200, color:'green', fillOpacity:0.1}).addTo(map);
+
+    // --- Event sidebar ---
+    function addEventToSidebar(type, text, marker){
+        const list = document.getElementById("event-list");
+        const div = document.createElement("div");
+        div.className = "event-item "+(type==="British"?"event-british":"event-colonist");
+        div.innerText = text;
+        div.onclick = ()=> { map.setView(marker.getLatLng(),15); marker.openPopup(); };
+        list.appendChild(div);
+    }
+
+    // --- Legend ---
+    const legend = L.control({position:'bottomright'});
+    legend.onAdd = function(map){
+        const div = L.DomUtil.create('div','legend');
+        div.innerHTML = `<span class="legend-title">Map Legend</span>
+            <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png"> British Troops<br>
+            <img src="https://cdn-icons-png.flaticon.com/512/190/190411.png"> Colonial Militia<br>
+            <span style="color:red; font-weight:bold;">—►</span> British Route<br>
+            <span style="color:blue;">●</span> Lexington Green<br>
+            <span style="color:green;">●</span> Concord North Bridge<br>`;
+        return div;
+    };
+    legend.addTo(map);
+</script>
+
+</body>
+</html>
